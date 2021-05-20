@@ -8,17 +8,11 @@ use Aws\S3\S3Client;
 
 class ClientFactory
 {
-    /**
-     * @return S3Client
-     */
     public static function getS3Client(): S3Client
     {
         return new S3Client(array_merge(['signature_version' => 'v4', self::defaultOptions()]));
     }
 
-    /**
-     * @return SnsClient
-     */
     public static function getSNSClient(): SnsClient
     {
         return new SnsClient(self::defaultOptions());
