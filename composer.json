@@ -1,0 +1,35 @@
+{
+  "name": "billysbilling/common-php",
+  "type": "project",
+  "description": "Project for sharing code between php projects",
+  "keywords": [],
+  "license": "MIT",
+  "require": {
+    "php": "^7.0|^8.0",
+    "aws/aws-sdk-php": "^3.0.0"
+  },
+  "require-dev": {
+
+  },
+  "autoload": {
+    "files": [
+      "src/helpers.php"
+    ],
+    "psr-4": {
+      "Common\\": "src/"
+    }
+  },
+  "autoload-dev": {
+  },
+  "scripts": {
+  },
+  "extra": {
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
