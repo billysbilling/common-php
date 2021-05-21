@@ -6,7 +6,7 @@ use Aws\Sns\SnsClient as AWSSnsClient;
 
 /**
  * Class SnsClient
- * @package Xf\Aws
+ * @package Common\Aws
  */
 class SnsClient extends AWSSnsClient
 {

@@ -3,9 +3,12 @@
 namespace Common\Aws;
 
 use Aws\Credentials\Credentials;
-use Aws\EventBridge\EventBridgeClient;
 use Aws\S3\S3Client;
 
+/**
+ * Class ClientFactory
+ * @package Common\Aws
+ */
 class ClientFactory
 {
     public static function getS3Client(): S3Client
