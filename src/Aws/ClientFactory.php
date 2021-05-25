@@ -13,17 +13,24 @@ class ClientFactory
 {
     public static function getS3Client(): S3Client
     {
-        return new S3Client(array_merge(self::defaultOptions(), ['signature_version' => 'v4']));
+        return new S3Client(array_merge(self::defaultOptions(), [
+            'signature_version' => 'v4',
+            'version' => '2006-03-01'
+        ]));
     }
 
     public static function getSNSClient(): SnsClient
     {
-        return new SnsClient(self::defaultOptions());
+        return new SnsClient(array_merge(self::defaultOptions(), [
+            'version' => '2010-03-31'
+        ]));
     }
 
     public static function getEventBridgeClient(): EventBridgeClient
     {
-        return new EventBridgeClient(self::defaultOptions());
+        return new EventBridgeClient(array_merge(self::defaultOptions(), [
+            'version' => '2015-10-07'
+        ]));
     }
 
     private static function defaultOptions(): array
@@ -31,7 +38,6 @@ class ClientFactory
         return [
             'credentials' => CredentialProvider::defaultProvider(),
             'region' => \getenv('AWS_REGION') ?: 'eu-north-1',
-            'version' => '2010-03-31'
         ];
     }
 }
