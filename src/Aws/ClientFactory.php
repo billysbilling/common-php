@@ -2,10 +2,14 @@
 
 namespace Common\Aws;
 
+use Aws\Credentials\CredentialProvider;
 use Aws\Credentials\Credentials;
-use Aws\EventBridge\EventBridgeClient;
 use Aws\S3\S3Client;
 
+/**
+ * Class ClientFactory
+ * @package Common\Aws
+ */
 class ClientFactory
 {
     public static function getS3Client(): S3Client
@@ -26,17 +30,9 @@ class ClientFactory
     private static function defaultOptions(): array
     {
         return [
-            'credentials' => self::getCredentials(),
+            'credentials' => CredentialProvider::defaultProvider(),
             'region' => \getenv('AWS_REGION'),
             'version' => '2010-03-31'
         ];
-    }
-
-    /**
-     * @return Credentials
-     */
-    private static function getCredentials(): Credentials
-    {
-        return new Credentials(\getenv('AWS_API_KEY'), \getenv('AWS_SECRET_KEY'));
     }
 }
