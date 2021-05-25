@@ -3,6 +3,7 @@
 namespace Common\Aws;
 
 use Aws\EventBridge\EventBridgeClient as AWSEventBridgeClient;
+use Carbon\Carbon;
 
 /**
  * Class EventBridgeClient
@@ -29,7 +30,7 @@ class EventBridgeClient extends AWSEventBridgeClient
                     'Detail' => json_encode(array_merge($data, $meta)),
                     'EventBusName' => getenv('AWS_EVENT_BUS'),
                     'Source' => getenv('DD_SERVICE'),
-                    'Time' => new \DateTime(),
+                    'Time' => Carbon::now()->toIso8601String(),
                 ], $entryParams)
             ]
         ];

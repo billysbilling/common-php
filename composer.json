@@ -6,10 +6,8 @@
   "license": "MIT",
   "require": {
     "php": "^7.0|^8.0",
-    "aws/aws-sdk-php": "^3.0.0"
-  },
-  "require-dev": {
-
+    "aws/aws-sdk-php": "^3.0.0",
+    "nesbot/carbon": "^2.48"
   },
   "autoload": {
     "files": [
