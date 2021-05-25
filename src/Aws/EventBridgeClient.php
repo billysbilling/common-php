@@ -28,7 +28,7 @@ class EventBridgeClient extends AWSEventBridgeClient
                     'DetailType' => $type,
                     'Detail' => json_encode(array_merge($data, $meta)),
                     'EventBusName' => getenv('AWS_EVENT_BUS'),
-                    'Source' => getenv('WHERE_THE_F_SHOULD_I_KNOW_THIS_FROM?!'),
+                    'Source' => getenv('DD_SERVICE'),
                     'Time' => new \DateTime(),
                 ], $entryParams)
             ]
