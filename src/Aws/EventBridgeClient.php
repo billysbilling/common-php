@@ -17,8 +17,8 @@ class EventBridgeClient extends AWSEventBridgeClient
         if (class_exists('DDTrace\\GlobalTracer')) {
             $meta = [
                 'meta' => [
-                    'DD_TRACE_ID' => \DDTrace\trace_id(),
-                    'DD_SPAN_ID' => \dd_trace_peek_span_id(),
+                    "x-datadog-trace-id" => \DDTrace\trace_id(),
+                    "x-datadog-parent-id" => \dd_trace_peek_span_id(),
                 ]
             ];
         }
