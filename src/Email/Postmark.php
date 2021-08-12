@@ -4,7 +4,7 @@ namespace Common\Email;
 
 use Postmark\PostmarkClient;
 
-class Postmark implements EmailInterface
+class Postmark implements EmailClientInterface
 {
     private PostmarkClient $client;
 

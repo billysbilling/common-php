@@ -2,7 +2,7 @@
 
 namespace Common\Email;
 
-interface EmailInterface
+interface EmailClientInterface
 {
     public function sendEmailWithTemplate(string $from, string $to, string $templateAlias, array $templateModel): void;
 }
