@@ -12,7 +12,7 @@ use Aws\MockHandler;
  */
 class ClientFactory
 {
-    private static EventBridgeClient $eventBridgeClient;
+    private static ?EventBridgeClient $eventBridgeClient = null;
 
     public static function getS3Client(MockHandler $mockHandler = null): S3Client
     {
