@@ -12,8 +12,6 @@ use Aws\MockHandler;
  */
 class ClientFactory
 {
-    private static EventBridgeClient $eventBridgeClient;
-
     public static function getS3Client(MockHandler $mockHandler = null): S3Client
     {
         return new S3Client(array_merge(self::defaultOptions($mockHandler), [
@@ -31,13 +29,9 @@ class ClientFactory
 
     public static function getEventBridgeClient(MockHandler $mockHandler = null): EventBridgeClient
     {
-        if (!self::$eventBridgeClient){
-            self::$eventBridgeClient = new EventBridgeClient(array_merge(self::defaultOptions($mockHandler), [
-                'version' => '2015-10-07'
-            ]));
-        }
-
-        return self::$eventBridgeClient;
+        return new EventBridgeClient(array_merge(self::defaultOptions($mockHandler), [
+            'version' => '2015-10-07'
+        ]));
     }
 
     private static function defaultOptions(MockHandler $mockHandler = null): array
