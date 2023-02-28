@@ -27,7 +27,7 @@ class SQSWorker extends SQSBase
                     foreach ($messages as $value) {
                         $job = new SQSJob($value);
                         $this->out('Processing ' . $job->getMessageId());
-                        $completed = $workerProcess();
+                        $completed = $workerProcess($job);
 
                         if ($completed) {
                             $this->ackMessage($value);
