@@ -2,7 +2,7 @@
 
 namespace Common\Aws\SQS;
 
-use Aws\Exception\AwsException;
+use Exception;
 
 class SQSWorker extends SQSBase
 {
@@ -18,7 +18,6 @@ class SQSWorker extends SQSBase
 
     public function listen(string $queueUrl, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
-
         $this->queueUrl = $queueUrl;
 
         $this->printQueueStarted();
@@ -38,7 +37,8 @@ class SQSWorker extends SQSBase
                             $this->out('Processed ' . $job->getMessageId(), self::LEVEL_SUCCESS);
                         } else {
                             $this->nackMessage($value);
-                            $this->out('Failed ' . $job->getMessageId(), self::LEVEL_DANGER);
+                            $this->out('Failed ' . $job->getMessageId() . '. ', self::LEVEL_DANGER);
+                            throw new Exception();
                         }
                     }
 
@@ -46,18 +46,16 @@ class SQSWorker extends SQSBase
 
                 $errorCounter = 0;
 
-            } catch (AwsException $e) {
+            } catch (\Throwable $e) {
 
                 if ($errorCounter >= 5) {
                     $checkForMessages = false;
+
+                    if ($errorHandlerCallback !== null) {
+                        $errorHandlerCallback($e->getMessage(), $errorCounter);
+                    }
                 }
                 $errorCounter++;
-                error_log($e->getMessage());
-
-                if ($errorHandlerCallback !== null) {
-                    $errorHandlerCallback($e->getMessage(), $errorCounter);
-                }
-            } catch (\Exception $e) {
                 error_log($e->getMessage());
             }
         }
