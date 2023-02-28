@@ -106,19 +106,19 @@ class SqsWorker extends SQSBase
 
     private function printQueueStarted(): void
     {
-        echo PHP_EOL.PHP_EOL;
-        echo PHP_EOL.'*****************************************************************';
-        echo PHP_EOL.'**** Worker started at ' . date('Y-m-d H:i:s');
-        echo PHP_EOL.'*****************************************************************';
+        $this->out(PHP_EOL);
+        $this->out('*****************************************************************');
+        $this->out('**** Worker started at ' . date('Y-m-d H:i:s'));
+        $this->out('*****************************************************************');
     }
 
     private function printQueueEnded(): void
     {
-        echo PHP_EOL.PHP_EOL;
-        echo PHP_EOL.'*****************************************************************';
-        echo PHP_EOL.'**** Worker finished at ' . date('Y-m-d H:i:s');
-        echo PHP_EOL.'*****************************************************************';
-        echo PHP_EOL.PHP_EOL;
+        $this->out(PHP_EOL);
+        $this->out('*****************************************************************');
+        $this->out('**** Worker finished at ' . date('Y-m-d H:i:s'));
+        $this->out('*****************************************************************');
+        $this->out(PHP_EOL);
     }
 
     private function out($message): void
