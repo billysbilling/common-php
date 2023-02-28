@@ -4,7 +4,7 @@ namespace Common\Aws\SQS;
 
 use Aws\Exception\AwsException;
 
-class SqsWorker extends SQSBase
+class SQSWorker extends SQSBase
 {
     public string $queueUrl;
     public int $sleep = 10;

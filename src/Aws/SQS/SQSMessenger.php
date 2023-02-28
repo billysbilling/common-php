@@ -1,10 +1,9 @@
 <?php
 
-namespace Common\Aws;
+namespace Common\Aws\SQS;
 
 use Aws\Exception\AwsException;
 use Aws\Result;
-use Common\Aws\SQS\SQSBase;
 
 class SQSMessenger extends SQSBase
 {
@@ -13,12 +12,12 @@ class SQSMessenger extends SQSBase
 
     public function publish(
         string $queueUrl,
-        array $message,
+        string $message,
         array $messageAttributes = [],
         int $delaySeconds = 10,
         string $messageGroupId = '',
         string $messageDeduplicationId = ''
-    ): Result|bool|null {
+    ): Result|null {
         $params = [
             'QueueUrl' => $queueUrl,
             'MessageBody' => $message,
@@ -47,14 +46,14 @@ class SQSMessenger extends SQSBase
             } catch (AwsException $e) {
 
                 if ($this->retryTimesOnFail > 0) {
-                    $result = false;
+                    $result = null;
                     $tryAgain = true;
 
                     if ($errorCounter >= $this->retryTimesOnFail) {
                         break;
                     }
 
-                    if ($errorCounter >= 2 && $this->waitBeforeRetry > 0) {
+                    if ($this->waitBeforeRetry > 0) {
                         sleep($this->waitBeforeRetry);
                     }
 
