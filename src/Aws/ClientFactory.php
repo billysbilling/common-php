@@ -5,6 +5,7 @@ namespace Common\Aws;
 use Aws\Credentials\CredentialProvider;
 use Aws\S3\S3Client;
 use Aws\MockHandler;
+use Aws\Sqs\SqsClient;
 
 /**
  * Class ClientFactory
@@ -31,6 +32,13 @@ class ClientFactory
     {
         return new EventBridgeClient(array_merge(self::defaultOptions($mockHandler), [
             'version' => '2015-10-07'
+        ]));
+    }
+
+    public static function getSQSClient(MockHandler $mockHandler = null): SqsClient
+    {
+        return new SqsClient(array_merge(self::defaultOptions($mockHandler), [
+            'version' => '2012-11-05'
         ]));
     }
 
