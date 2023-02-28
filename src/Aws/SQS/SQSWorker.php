@@ -12,6 +12,10 @@ class SQSWorker extends SQSBase
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
 
+    private const LEVEL_SUCCESS = 'success';
+    private const LEVEL_WARNING = 'warning';
+    private const LEVEL_DANGER = 'danger';
+
     public function listen(string $queueUrl, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
 
@@ -26,15 +30,15 @@ class SQSWorker extends SQSBase
                 $this->getMessages(function (array $messages) use ($workerProcess) {
                     foreach ($messages as $value) {
                         $job = new SQSJob($value);
-                        $this->out('Processing ' . $job->getMessageId());
+                        $this->out('Processing ' . $job->getMessageId(), self::LEVEL_WARNING);
                         $completed = $workerProcess($job);
 
                         if ($completed) {
                             $this->ackMessage($value);
-                            $this->out('Processed ' . $job->getMessageId());
+                            $this->out('Processed ' . $job->getMessageId(), self::LEVEL_SUCCESS);
                         } else {
                             $this->nackMessage($value);
-                            $this->out('Failed ' . $job->getMessageId());
+                            $this->out('Failed ' . $job->getMessageId(), self::LEVEL_DANGER);
                         }
                     }
 
@@ -75,7 +79,6 @@ class SQSWorker extends SQSBase
 
         $messages = $result->get('Messages');
         if ($messages !== null) {
-            $this->out(count($messages) . " messages found");
             $callback($messages);
         } else {
             sleep($this->sleep);
@@ -116,9 +119,19 @@ class SQSWorker extends SQSBase
         $this->out(PHP_EOL);
     }
 
-    private function out($message): void
+    private function out($message, ?string $level = null): void
     {
-        echo PHP_EOL . $message;
+        echo PHP_EOL . $this->getCLIColor($level) . $message . "\e[0m";
+    }
+
+    private function getCLIColor(string $level = null): string
+    {
+        return match ($level) {
+            self::LEVEL_SUCCESS => "\e[0;32m",
+            self::LEVEL_WARNING => "\e[0;33m",
+            self::LEVEL_DANGER => "\e[0;31m",
+            default => "\e[0m",
+        };
     }
 
 }
