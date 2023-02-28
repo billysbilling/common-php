@@ -3,22 +3,14 @@
 namespace Common\Aws\SQS;
 
 use Aws\Exception\AwsException;
-use Aws\Sqs\SqsClient;
-use Common\Aws\ClientFactory;
 
-class SqsWorker
+class SqsWorker extends SQSBase
 {
     public string $queueUrl;
     public int $sleep = 10;
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
-    private SqsClient $sqsClient;
-
-    public function __construct()
-    {
-        $this->sqsClient = ClientFactory::getSQSClient();
-    }
 
     public function listen(string $queueUrl, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
@@ -56,8 +48,6 @@ class SqsWorker
                     $checkForMessages = false;
                 }
                 $errorCounter++;
-
-                // output error message if fails
                 error_log($e->getMessage());
 
                 if ($errorHandlerCallback !== null) {
