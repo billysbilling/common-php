@@ -11,7 +11,7 @@ class SQSMessenger extends SQSBase
     public int $waitBeforeRetry = 1;
 
     public function publish(
-        string $queueUrl,
+        string $queueName,
         string $message,
         array $messageAttributes = [],
         int $delaySeconds = 10,
@@ -19,7 +19,7 @@ class SQSMessenger extends SQSBase
         string $messageDeduplicationId = ''
     ): Result|null {
         $params = [
-            'QueueUrl' => $queueUrl,
+            'QueueUrl' => $this->getQueueUrl($queueName),
             'MessageBody' => $message,
             'MessageAttributes' => $messageAttributes,
         ];

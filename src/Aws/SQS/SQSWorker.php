@@ -16,9 +16,9 @@ class SQSWorker extends SQSBase
     private const LEVEL_WARNING = 'warning';
     private const LEVEL_DANGER = 'danger';
 
-    public function listen(string $queueUrl, callable $workerProcess, callable $errorHandlerCallback = null): void
+    public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
-        $this->queueUrl = $queueUrl;
+        $this->queueUrl = $this->getQueueUrl($queueName);
 
         $this->printQueueStarted();
 
