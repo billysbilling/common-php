@@ -20,21 +20,21 @@ class SQSWorker extends SQSBase
         $this->printQueueStarted();
 
         $checkForMessages = true;
-        $counterCheck = 0;
         $errorCounter = 0;
         while ($checkForMessages) {
-            $this->out('Check(' . $counterCheck . ') time: ' . date('Y-m-d H:i:s'));
-
             try {
-                $this->out('Retrieving messages...');
                 $this->getMessages(function (array $messages) use ($workerProcess) {
                     foreach ($messages as $value) {
-                        $completed = $workerProcess($value);
+                        $job = new SQSJob($value);
+                        $this->out('Processing ' . $job->getMessageId());
+                        $completed = $workerProcess();
 
                         if ($completed) {
                             $this->ackMessage($value);
+                            $this->out('Processed ' . $job->getMessageId());
                         } else {
                             $this->nackMessage($value);
+                            $this->out('Failed ' . $job->getMessageId());
                         }
                     }
 
@@ -56,8 +56,6 @@ class SQSWorker extends SQSBase
             } catch (\Exception $e) {
                 error_log($e->getMessage());
             }
-            $counterCheck++;
-
         }
 
         $this->printQueueEnded();
@@ -70,7 +68,7 @@ class SQSWorker extends SQSBase
             'AttributeNames' => ['SentTimestamp'],
             'MaxNumberOfMessages' => $this->maxNumberOfMessages,
             'MessageAttributeNames' => ['All'],
-            'QueueUrl' => $this->queueUrl, // REQUIRED
+            'QueueUrl' => $this->queueUrl,
             'WaitTimeSeconds' => $this->waitTimeSeconds,
             'VisibilityTimeout' => $this->visibilityTimeout,
         ]);
@@ -80,10 +78,7 @@ class SQSWorker extends SQSBase
             $this->out(count($messages) . " messages found");
             $callback($messages);
         } else {
-            $this->out('No messages found');
-            $sleep = $this->sleep;
-            $this->out("Sleeping for $sleep seconds");
-            sleep($sleep);
+            sleep($this->sleep);
         }
     }
 
