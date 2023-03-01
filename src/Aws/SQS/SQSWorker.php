@@ -38,7 +38,6 @@ class SQSWorker extends SQSBase
                         } else {
                             $this->nackMessage($value);
                             $this->out('Failed ' . $job->getMessageId() . '. ', self::LEVEL_DANGER);
-                            throw new Exception();
                         }
                     }
 
@@ -52,7 +51,7 @@ class SQSWorker extends SQSBase
                     $checkForMessages = false;
 
                     if ($errorHandlerCallback !== null) {
-                        $errorHandlerCallback($e->getMessage(), $errorCounter);
+                        $errorHandlerCallback($e, $errorCounter);
                     }
                 }
                 $errorCounter++;
@@ -94,7 +93,7 @@ class SQSWorker extends SQSBase
     private function nackMessage(array $message): void
     {
         $this->sqsClient->changeMessageVisibility([
-            'VisibilityTimeout' => 0,
+            'VisibilityTimeout' => 10,
             'QueueUrl' => $this->queueUrl,
             'ReceiptHandle' => $message['ReceiptHandle'],
         ]);
