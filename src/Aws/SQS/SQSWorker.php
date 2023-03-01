@@ -105,6 +105,7 @@ class SQSWorker extends SQSBase
         $this->out(PHP_EOL);
         $this->out('*****************************************************************');
         $this->out('**** Worker started at ' . date('Y-m-d H:i:s'));
+        $this->out('**** ' . $this->queueUrl);
         $this->out('*****************************************************************');
     }
 
