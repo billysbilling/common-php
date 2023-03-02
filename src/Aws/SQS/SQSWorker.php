@@ -66,7 +66,7 @@ class SQSWorker extends SQSBase
     private function getMessages(callable $callback): void
     {
         $result = $this->sqsClient->receiveMessage([
-            'AttributeNames' => ['SentTimestamp'],
+            'AttributeNames' => ['SentTimestamp', 'ApproximateReceiveCount'],
             'MaxNumberOfMessages' => $this->maxNumberOfMessages,
             'MessageAttributeNames' => ['All'],
             'QueueUrl' => $this->queueUrl,
