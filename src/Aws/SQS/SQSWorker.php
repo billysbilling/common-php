@@ -30,7 +30,6 @@ class SQSWorker extends SQSBase
                     foreach ($messages as $value) {
                         $job = new SQSJob($value);
                         $this->out('Processing ' . $job->getMessageId(), self::LEVEL_WARNING);
-                        $this->out($job->toJson());
                         $completed = $workerProcess($job);
 
                         if ($completed) {
