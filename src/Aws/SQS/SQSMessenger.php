@@ -14,7 +14,7 @@ class SQSMessenger extends SQSBase
         string $queueName,
         string $message,
         array $messageAttributes = [],
-        int $delaySeconds = 10,
+        int $delaySeconds = 0,
         string $messageGroupId = '',
         string $messageDeduplicationId = ''
     ): Result|null {
