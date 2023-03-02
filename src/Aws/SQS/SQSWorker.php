@@ -93,7 +93,7 @@ class SQSWorker extends SQSBase
     private function nackMessage(array $message): void
     {
         $this->sqsClient->changeMessageVisibility([
-            'VisibilityTimeout' => 10,
+            'VisibilityTimeout' => 0,
             'QueueUrl' => $this->queueUrl,
             'ReceiptHandle' => $message['ReceiptHandle'],
         ]);
@@ -101,7 +101,6 @@ class SQSWorker extends SQSBase
 
     private function printQueueStarted(): void
     {
-        $this->out(PHP_EOL);
         $this->out('*****************************************************************');
         $this->out('**** Worker started at ' . date('Y-m-d H:i:s'));
         $this->out('**** ' . $this->queueUrl);
@@ -110,11 +109,9 @@ class SQSWorker extends SQSBase
 
     private function printQueueEnded(): void
     {
-        $this->out(PHP_EOL);
         $this->out('*****************************************************************');
         $this->out('**** Worker finished at ' . date('Y-m-d H:i:s'));
         $this->out('*****************************************************************');
-        $this->out(PHP_EOL);
     }
 
     private function out($message, ?string $level = null): void
