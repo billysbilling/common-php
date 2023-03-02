@@ -30,9 +30,9 @@ class SQSWorker extends SQSBase
                     foreach ($messages as $value) {
                         $job = new SQSJob($value);
                         $this->out('Processing ' . $job->getMessageId(), self::LEVEL_WARNING);
-                        $completed = $workerProcess($job);
+                        $exitCode = $workerProcess($job);
 
-                        if ($completed) {
+                        if ($exitCode === 0 || is_null($exitCode)) {
                             $this->ackMessage($value);
                             $this->out('Processed ' . $job->getMessageId(), self::LEVEL_SUCCESS);
                         } else {
