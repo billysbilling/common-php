@@ -7,7 +7,6 @@ use Aws\Credentials\Credentials;
 use Aws\S3\S3Client;
 use Aws\MockHandler;
 use Aws\Sqs\SqsClient;
-use Closure;
 
 /**
  * Class ClientFactory
@@ -16,11 +15,15 @@ use Closure;
 class ClientFactory
 {
     private static ?Credentials $credentials = null;
+
     private function __construct(Credentials $credentials)
     {
         self::$credentials = $credentials;
     }
 
+    /**
+     * Get a new instance of ClientFactory, with a fixed set of credentials.
+     */
     public static function withCredentials(Credentials $credentials): static
     {
         return new static($credentials);
