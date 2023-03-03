@@ -3,9 +3,11 @@
 namespace Common\Aws;
 
 use Aws\Credentials\CredentialProvider;
+use Aws\Credentials\Credentials;
 use Aws\S3\S3Client;
 use Aws\MockHandler;
 use Aws\Sqs\SqsClient;
+use Closure;
 
 /**
  * Class ClientFactory
@@ -13,6 +15,17 @@ use Aws\Sqs\SqsClient;
  */
 class ClientFactory
 {
+    private static ?Credentials $credentials = null;
+    private function __construct(Credentials $credentials)
+    {
+        self::$credentials = $credentials;
+    }
+
+    public static function withCredentials(Credentials $credentials): static
+    {
+        return new static($credentials);
+    }
+
     public static function getS3Client(MockHandler $mockHandler = null): S3Client
     {
         return new S3Client(array_merge(self::defaultOptions($mockHandler), [
@@ -45,7 +58,7 @@ class ClientFactory
     private static function defaultOptions(MockHandler $mockHandler = null): array
     {
         return [
-            'credentials' => CredentialProvider::defaultProvider(),
+            'credentials' => self::$credentials ?: CredentialProvider::defaultProvider(),
             'region' => \getenv('AWS_REGION') ?: 'eu-north-1',
             'handler' => $mockHandler,
         ];
