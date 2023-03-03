@@ -2,8 +2,6 @@
 
 namespace Common\Aws\SQS;
 
-use Exception;
-
 class SQSWorker extends SQSBase
 {
     public string $queueUrl;
