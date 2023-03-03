@@ -64,7 +64,7 @@ class SQSWorker extends SQSBase
     private function getMessages(callable $callback): void
     {
         $result = $this->sqsClient->receiveMessage([
-            'AttributeNames' => ['SentTimestamp'],
+            'AttributeNames' => ['SentTimestamp', 'ApproximateReceiveCount'],
             'MaxNumberOfMessages' => $this->maxNumberOfMessages,
             'MessageAttributeNames' => ['All'],
             'QueueUrl' => $this->queueUrl,
@@ -91,7 +91,7 @@ class SQSWorker extends SQSBase
     private function nackMessage(array $message): void
     {
         $this->sqsClient->changeMessageVisibility([
-            'VisibilityTimeout' => 0,
+            'VisibilityTimeout' => 10,
             'QueueUrl' => $this->queueUrl,
             'ReceiptHandle' => $message['ReceiptHandle'],
         ]);
