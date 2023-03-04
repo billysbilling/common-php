@@ -9,6 +9,7 @@ class SQSWorker extends SQSBase
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
+
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
         $this->queueUrl = $this->getQueueUrl($queueName);
@@ -22,15 +23,15 @@ class SQSWorker extends SQSBase
                 $this->getMessages(function (array $messages) use ($workerProcess) {
                     foreach ($messages as $value) {
                         $job = new SQSJob($value);
-                        $this->log('Processing ' . $job->getMessageId(), self::LEVEL_WARNING);
+                        $this->log('Processing: ' . $job->getMessageId());
                         $exitCode = $workerProcess($job);
 
                         if ($exitCode === 0 || is_null($exitCode)) {
                             $this->ackMessage($value);
-                            $this->log('Processed ' . $job->getMessageId(), self::LEVEL_SUCCESS);
+                            $this->log('Processed: ' . $job->getMessageId());
                         } else {
                             $this->nackMessage($value);
-                            $this->log('Failed ' . $job->getMessageId() . '. ', self::LEVEL_DANGER);
+                            $this->log('Failed: ' . $job->getMessageId());
                         }
                     }
 
