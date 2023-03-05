@@ -23,6 +23,11 @@ class SQSJob
         return $this->data['Attributes'];
     }
 
+    public function attempts(): int
+    {
+        return (int) $this->getAttributes()['ApproximateReceiveCount'];
+    }
+
     public function toArray(): array
     {
         return $this->data;

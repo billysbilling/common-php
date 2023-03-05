@@ -2,6 +2,9 @@
 
 namespace Common\Aws\SQS;
 
+use Common\Aws\SQS\Exceptions\MaxAttemptsException;
+use Throwable;
+
 class SQSWorker extends SQSBase
 {
     public string $queueUrl;
@@ -9,6 +12,8 @@ class SQSWorker extends SQSBase
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
+
+    public int $maxAttempts = 5;
 
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
@@ -20,18 +25,22 @@ class SQSWorker extends SQSBase
         $errorCounter = 0;
         while ($checkForMessages) {
             try {
-                $this->getMessages(function (array $messages) use ($workerProcess) {
-                    foreach ($messages as $value) {
-                        $job = new SQSJob($value);
+                $this->getMessages(function (array $messages) use ($workerProcess, $errorHandlerCallback) {
+                    foreach ($messages as $message) {
+                        $job = new SQSJob($message);
                         $this->log('Processing: ' . $job->getMessageId());
                         $exitCode = $workerProcess($job);
 
                         if ($exitCode === 0 || is_null($exitCode)) {
-                            $this->ackMessage($value);
+                            $this->ackMessage($message);
                             $this->log('Processed: ' . $job->getMessageId());
                         } else {
-                            $this->nackMessage($value);
+                            $this->nackMessage($message);
                             $this->log('Failed: ' . $job->getMessageId());
+
+                            if ($job->attempts() >= $this->maxAttempts) {
+                                $this->handleErrorCallback(new MaxAttemptsException('Job failed after too many attempts.'), $job->attempts(), $errorHandlerCallback);
+                            }
                         }
                     }
 
@@ -41,12 +50,9 @@ class SQSWorker extends SQSBase
 
             } catch (\Throwable $e) {
 
-                if ($errorCounter >= 5) {
+                if ($this->maxAttempts >= 5) {
                     $checkForMessages = false;
-
-                    if ($errorHandlerCallback !== null) {
-                        $errorHandlerCallback($e, $errorCounter);
-                    }
+                    $this->handleErrorCallback($e, $errorCounter, $errorHandlerCallback);
                 }
                 $errorCounter++;
                 error_log($e->getMessage());
@@ -87,10 +93,17 @@ class SQSWorker extends SQSBase
     private function nackMessage(array $message): void
     {
         $this->sqsClient->changeMessageVisibility([
-            'VisibilityTimeout' => 10,
+            'VisibilityTimeout' => 0,
             'QueueUrl' => $this->queueUrl,
             'ReceiptHandle' => $message['ReceiptHandle'],
         ]);
+    }
+
+    private function handleErrorCallback(Throwable $e, ?int $errorCount, callable $errorHandlerCallback = null): void
+    {
+        if ($errorHandlerCallback) {
+            $errorHandlerCallback($e, $errorCount);
+        }
     }
 
     private function printQueueStarted(): void
