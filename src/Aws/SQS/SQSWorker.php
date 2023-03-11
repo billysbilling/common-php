@@ -105,6 +105,6 @@ class SQSWorker extends SQSBase
 
     private function log($message): void
     {
-        echo PHP_EOL . $message;
+        echo $message . PHP_EOL;
     }
 }
