@@ -18,7 +18,7 @@ class ClientFactory
 
     private function __construct(Credentials $credentials)
     {
-        self::$credentials = $credentials;
+        self::$credentials = CredentialProvider::defaultProvider();
     }
 
     /**
