@@ -12,6 +12,7 @@ class SQSWorker extends SQSBase
     public int $visibilityTimeout = 360;
     private ?SQSJob $latestSQSJob = null;
     private bool $checkForMessages = true;
+    private int $emptyQueueCount = 0;
 
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
@@ -62,7 +63,13 @@ class SQSWorker extends SQSBase
         if ($messages !== null) {
             $callback($messages);
         } else {
-            $this->checkForMessages = false;
+            $this->emptyQueueCount++;
+            if ($this->emptyQueueCount > 10) {
+                $this->checkForMessages = false;
+            } else {
+                sleep(5);
+            }
+
         }
     }
 
