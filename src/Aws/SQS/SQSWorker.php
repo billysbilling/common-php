@@ -2,13 +2,16 @@
 
 namespace Common\Aws\SQS;
 
+use Common\Aws\Exception\SQSJobFailedException;
+
 class SQSWorker extends SQSBase
 {
     public string $queueUrl;
-    public int $sleep = 10;
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
+    private ?SQSJob $latestSQSJob = null;
+    private bool $checkForMessages = true;
 
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
@@ -16,13 +19,12 @@ class SQSWorker extends SQSBase
 
         $this->printQueueStarted();
 
-        $checkForMessages = true;
-        $errorCounter = 0;
-        while ($checkForMessages) {
+        while ($this->checkForMessages) {
             try {
                 $this->getMessages(function (array $messages) use ($workerProcess) {
                     foreach ($messages as $value) {
                         $job = new SQSJob($value);
+                        $this->latestSQSJob = $job;
                         $this->log('Processing: ' . $job->getMessageId());
                         $exitCode = $workerProcess($job);
 
@@ -36,20 +38,8 @@ class SQSWorker extends SQSBase
                     }
 
                 });
-
-                $errorCounter = 0;
-
             } catch (\Throwable $e) {
-
-                if ($errorCounter >= 5) {
-                    $checkForMessages = false;
-
-                    if ($errorHandlerCallback !== null) {
-                        $errorHandlerCallback($e, $errorCounter);
-                    }
-                }
-                $errorCounter++;
-                error_log($e->getMessage());
+                $errorHandlerCallback(SQSJobFailedException::create($e, $this->latestSQSJob), $this->latestSQSJob?->attempts());
             }
         }
 
@@ -72,7 +62,7 @@ class SQSWorker extends SQSBase
         if ($messages !== null) {
             $callback($messages);
         } else {
-            sleep($this->sleep);
+            $this->checkForMessages = false;
         }
     }
 
@@ -87,7 +77,7 @@ class SQSWorker extends SQSBase
     private function nackMessage(array $message): void
     {
         $this->sqsClient->changeMessageVisibility([
-            'VisibilityTimeout' => 10,
+            'VisibilityTimeout' => 0,
             'QueueUrl' => $this->queueUrl,
             'ReceiptHandle' => $message['ReceiptHandle'],
         ]);

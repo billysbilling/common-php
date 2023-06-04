@@ -18,6 +18,11 @@ class SQSJob
         return $this->data['MessageId'];
     }
 
+    public function attempts(): int
+    {
+        return (int) $this->data['Attributes']['ApproximateReceiveCount'];
+    }
+
     public function getAttributes()
     {
         return $this->data['Attributes'];
