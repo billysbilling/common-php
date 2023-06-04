@@ -2,6 +2,7 @@
 
 namespace Common\Aws\SQS;
 
+use Carbon\Carbon;
 use Common\Aws\Exception\SQSJobFailedException;
 
 class SQSWorker extends SQSBase
@@ -12,11 +13,12 @@ class SQSWorker extends SQSBase
     public int $visibilityTimeout = 360;
     private ?SQSJob $latestSQSJob = null;
     private bool $checkForMessages = true;
-    private int $emptyQueueCount = 0;
+    private Carbon $queueStartedAt;
 
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
         $this->queueUrl = $this->getQueueUrl($queueName);
+        $this->queueStartedAt = Carbon::now();
 
         $this->printQueueStarted();
 
@@ -63,8 +65,7 @@ class SQSWorker extends SQSBase
         if ($messages !== null) {
             $callback($messages);
         } else {
-            $this->emptyQueueCount++;
-            if ($this->emptyQueueCount > 10) {
+            if (Carbon::now()->gt($this->queueStartedAt->addDay())) {
                 $this->checkForMessages = false;
             } else {
                 sleep(5);
@@ -97,7 +98,7 @@ class SQSWorker extends SQSBase
 
     private function printQueueEnded(): void
     {
-        $this->log('**** Worker finished on queue: ' . $this->queueUrl);
+        $this->log('**** Worker finished on queue: ' . $this->queueUrl . ' after ' . $this->queueStartedAt->diffForHumans());
     }
 
     private function log($message): void
