@@ -30,11 +30,21 @@ class SQSJob
 
     public function toArray(): array
     {
-        return $this->data;
+        $body = $this->getBody();
+        return [
+            'Body' => $this->isBase64($body) ? base64_decode($body) : $body,
+            'MessageId' => $this->data['MessageId'],
+            'Attributes' => $this->data['Attributes'],
+        ];
     }
 
     public function toJson(): string|false
     {
-        return json_encode($this->data, JSON_THROW_ON_ERROR);
+        return json_encode($this->toArray(), JSON_THROW_ON_ERROR);
+    }
+
+    private function isBase64(string $value): bool
+    {
+        return (bool) preg_match('/^[a-zA-Z0-9\/\r\n+]*={0,2}$/', $value);
     }
 }
