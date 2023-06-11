@@ -7,43 +7,49 @@ use Common\Aws\Exception\SQSJobFailedException;
 
 class SQSWorker extends SQSBase
 {
+    private string $queueName;
     public string $queueUrl;
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
-    private ?SQSJob $latestSQSJob = null;
+    private ?SQSJob $currentJob = null;
     private bool $checkForMessages = true;
     private Carbon $queueStartedAt;
 
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
-        $this->queueUrl = $this->getQueueUrl($queueName);
+        $this->queueName = $queueName;
+        $this->queueUrl = $this->getQueueUrl($this->queueName);
         $this->queueStartedAt = Carbon::now();
 
         $this->printQueueStarted();
 
         while ($this->checkForMessages) {
-            try {
-                $this->getMessages(function (array $messages) use ($workerProcess) {
-                    foreach ($messages as $value) {
-                        $job = new SQSJob($value);
-                        $this->latestSQSJob = $job;
-                        $this->log('Processing: ' . $job->getMessageId());
-                        $exitCode = $workerProcess($job);
+
+            $this->getMessages(function (array $messages) use ($workerProcess, $errorHandlerCallback) {
+                foreach ($messages as $value) {
+                    try {
+                        $this->currentJob = new SQSJob($value);
+
+                        $this->log("Processing: " . $this->currentJob->getMessageId());
+
+                        // Process the job
+                        $exitCode = $workerProcess($this->currentJob);
 
                         if ($exitCode === 0 || is_null($exitCode)) {
                             $this->ackMessage($value);
-                            $this->log('Processed: ' . $job->getMessageId());
+                            $this->log('Processed: ' . $this->currentJob->getMessageId());
                         } else {
                             $this->nackMessage($value);
-                            $this->log('Failed: ' . $job->getMessageId());
+                            $this->log('Failed: ' . $this->currentJob->getMessageId());
                         }
-                    }
+                    } catch (\Throwable $e) {
 
-                });
-            } catch (\Throwable $e) {
-                $errorHandlerCallback(SQSJobFailedException::create($e, $this->latestSQSJob), $this->latestSQSJob?->attempts());
-            }
+                        $this->log('Error: ' . $this->currentJob->getMessageId() . ' - ' . $e->getMessage());
+                        $errorHandlerCallback(SQSJobFailedException::create($e, $this->currentJob), $this->currentJob?->attempts());
+                    }
+                }
+            });
         }
 
         $this->printQueueEnded();
@@ -65,12 +71,11 @@ class SQSWorker extends SQSBase
         if ($messages !== null) {
             $callback($messages);
         } else {
-            if (Carbon::now()->gt($this->queueStartedAt->addDay())) {
+            if (Carbon::now()->gte($this->queueStartedAt->copy()->addHour())) {
                 $this->checkForMessages = false;
             } else {
-                sleep(5);
+                sleep(10);
             }
-
         }
     }
 
@@ -93,12 +98,12 @@ class SQSWorker extends SQSBase
 
     private function printQueueStarted(): void
     {
-        $this->log('**** Worker started on queue: ' . $this->queueUrl);
+        $this->log('**** Worker started on queue: ' . $this->queueName);
     }
 
     private function printQueueEnded(): void
     {
-        $this->log('**** Worker finished on queue: ' . $this->queueUrl . ' after ' . $this->queueStartedAt->diffForHumans());
+        $this->log('**** Worker finished on queue: ' . $this->queueName . '. (Started ' . $this->queueStartedAt->toDateTimeString() . ')');
     }
 
     private function log($message): void

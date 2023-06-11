@@ -1,6 +1,6 @@
 <?php
 
-namespace Common\AWS\SQS;
+namespace Common\Aws\SQS;
 
 class SQSJob
 {
