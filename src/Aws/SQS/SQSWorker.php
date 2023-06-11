@@ -49,7 +49,7 @@ class SQSWorker extends SQSBase
                     } catch (\Throwable $e) {
 
                         $this->nackMessage($value);
-                        $this->log('Failed: ' . $this->currentJob->getMessageId());
+                        $this->log('Error: ' . $this->currentJob->getMessageId() . ' - ' . $e->getMessage());
 
                         $errorHandlerCallback(SQSJobFailedException::create($e, $this->currentJob), $this->currentJob?->attempts());
                     }
@@ -79,7 +79,7 @@ class SQSWorker extends SQSBase
             sleep(5);
         }
 
-        if (Carbon::now()->gte($this->queueStartedAt->copy()->addHour())) {
+        if (Carbon::now()->gte($this->queueStartedAt->copy()->addMinutes(10))) {
             $this->checkForMessages = false;
         }
     }
