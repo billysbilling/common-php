@@ -45,9 +45,7 @@ class SQSWorker extends SQSBase
                         }
                     } catch (\Throwable $e) {
 
-                        $this->nackMessage($value);
                         $this->log('Error: ' . $this->currentJob->getMessageId() . ' - ' . $e->getMessage());
-
                         $errorHandlerCallback(SQSJobFailedException::create($e, $this->currentJob), $this->currentJob?->attempts());
                     }
                 }
