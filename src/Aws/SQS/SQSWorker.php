@@ -10,7 +10,7 @@ class SQSWorker extends SQSBase
     private string $queueName;
     public string $queueUrl;
     public int $waitTimeSeconds = 20;
-    public int $maxNumberOfMessages = 10;
+    public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
     private ?SQSJob $currentJob = null;
     private bool $checkForMessages = true;
@@ -27,16 +27,11 @@ class SQSWorker extends SQSBase
         while ($this->checkForMessages) {
 
             $this->getMessages(function (array $messages) use ($workerProcess, $errorHandlerCallback) {
-
-                $totalCount = count($messages);
-                $processCount = 0;
-
                 foreach ($messages as $value) {
-                    $processCount++;
                     try {
                         $this->currentJob = new SQSJob($value);
 
-                        $this->log("Processing ($processCount of $totalCount): " . $this->currentJob->getMessageId());
+                        $this->log("Processing: " . $this->currentJob->getMessageId());
 
                         // Process the job
                         $exitCode = $workerProcess($this->currentJob);
