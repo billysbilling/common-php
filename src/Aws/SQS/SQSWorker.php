@@ -10,7 +10,7 @@ class SQSWorker extends SQSBase
     private string $queueName;
     public string $queueUrl;
     public int $waitTimeSeconds = 20;
-    public int $maxNumberOfMessages = 1;
+    public int $maxNumberOfMessages = 10;
     public int $visibilityTimeout = 360;
     private ?SQSJob $currentJob = null;
     private bool $checkForMessages = true;
