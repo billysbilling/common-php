@@ -7,6 +7,7 @@ use Common\Aws\Exception\SQSJobFailedException;
 
 class SQSWorker extends SQSBase
 {
+    private string $queueName;
     public string $queueUrl;
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
@@ -17,7 +18,8 @@ class SQSWorker extends SQSBase
 
     public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
     {
-        $this->queueUrl = $this->getQueueUrl($queueName);
+        $this->queueName = $queueName;
+        $this->queueUrl = $this->getQueueUrl($this->queueName);
         $this->queueStartedAt = Carbon::now();
 
         $this->printQueueStarted();
@@ -75,12 +77,14 @@ class SQSWorker extends SQSBase
         $messages = $result->get('Messages');
         if ($messages !== null) {
             $callback($messages);
-        } else {
-            sleep(5);
+
+            return;
         }
 
-        if (Carbon::now()->gte($this->queueStartedAt->copy()->addMinutes(10))) {
+        if (Carbon::now()->gte($this->queueStartedAt->copy()->addHour())) {
             $this->checkForMessages = false;
+        } else {
+            sleep(10);
         }
     }
 
@@ -103,12 +107,12 @@ class SQSWorker extends SQSBase
 
     private function printQueueStarted(): void
     {
-        $this->log('**** Worker started on queue: ' . $this->queueUrl . ' @' . $this->queueStartedAt->toDateTimeString());
+        $this->log('**** Worker started on queue: ' . $this->queueName);
     }
 
     private function printQueueEnded(): void
     {
-        $this->log('**** Worker finished on queue: ' . $this->queueUrl . ' after ' . $this->queueStartedAt->diffForHumans());
+        $this->log('**** Worker finished on queue: ' . $this->queueName . '. (Started ' . $this->queueStartedAt->toDateTimeString() . ')');
     }
 
     private function log($message): void
