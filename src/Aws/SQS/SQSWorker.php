@@ -11,7 +11,7 @@ class SQSWorker extends SQSBase
     public int $waitTimeSeconds = 20;
     public int $maxNumberOfMessages = 1;
     public int $visibilityTimeout = 360;
-    private ?SQSJob $latestSQSJob = null;
+    private ?SQSJob $currentJob = null;
     private bool $checkForMessages = true;
     private Carbon $queueStartedAt;
 
@@ -23,27 +23,38 @@ class SQSWorker extends SQSBase
         $this->printQueueStarted();
 
         while ($this->checkForMessages) {
-            try {
-                $this->getMessages(function (array $messages) use ($workerProcess) {
-                    foreach ($messages as $value) {
-                        $job = new SQSJob($value);
-                        $this->latestSQSJob = $job;
-                        $this->log('Processing: ' . $job->getMessageId());
-                        $exitCode = $workerProcess($job);
+
+            $this->getMessages(function (array $messages) use ($workerProcess, $errorHandlerCallback) {
+
+                $totalCount = count($messages);
+                $processCount = 0;
+
+                foreach ($messages as $value) {
+                    $processCount++;
+                    try {
+                        $this->currentJob = new SQSJob($value);
+
+                        $this->log("Processing ($processCount of $totalCount): " . $this->currentJob->getMessageId());
+
+                        // Process the job
+                        $exitCode = $workerProcess($this->currentJob);
 
                         if ($exitCode === 0 || is_null($exitCode)) {
                             $this->ackMessage($value);
-                            $this->log('Processed: ' . $job->getMessageId());
+                            $this->log('Processed: ' . $this->currentJob->getMessageId());
                         } else {
                             $this->nackMessage($value);
-                            $this->log('Failed: ' . $job->getMessageId());
+                            $this->log('Failed: ' . $this->currentJob->getMessageId());
                         }
-                    }
+                    } catch (\Throwable $e) {
 
-                });
-            } catch (\Throwable $e) {
-                $errorHandlerCallback(SQSJobFailedException::create($e, $this->latestSQSJob), $this->latestSQSJob?->attempts());
-            }
+                        $this->nackMessage($value);
+                        $this->log('Failed: ' . $this->currentJob->getMessageId());
+
+                        $errorHandlerCallback(SQSJobFailedException::create($e, $this->currentJob), $this->currentJob?->attempts());
+                    }
+                }
+            });
         }
 
         $this->printQueueEnded();
@@ -65,12 +76,11 @@ class SQSWorker extends SQSBase
         if ($messages !== null) {
             $callback($messages);
         } else {
-            if (Carbon::now()->gt($this->queueStartedAt->addDay())) {
-                $this->checkForMessages = false;
-            } else {
-                sleep(5);
-            }
+            sleep(5);
+        }
 
+        if (Carbon::now()->gte($this->queueStartedAt->copy()->addHour())) {
+            $this->checkForMessages = false;
         }
     }
 
@@ -93,7 +103,7 @@ class SQSWorker extends SQSBase
 
     private function printQueueStarted(): void
     {
-        $this->log('**** Worker started on queue: ' . $this->queueUrl);
+        $this->log('**** Worker started on queue: ' . $this->queueUrl . ' @' . $this->queueStartedAt->toDateTimeString());
     }
 
     private function printQueueEnded(): void
