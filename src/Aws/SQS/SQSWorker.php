@@ -77,14 +77,12 @@ class SQSWorker extends SQSBase
         $messages = $result->get('Messages');
         if ($messages !== null) {
             $callback($messages);
-
-            return;
-        }
-
-        if (Carbon::now()->gte($this->queueStartedAt->copy()->addHour())) {
-            $this->checkForMessages = false;
         } else {
-            sleep(10);
+            if (Carbon::now()->gte($this->queueStartedAt->copy()->addHour())) {
+                $this->checkForMessages = false;
+            } else {
+                sleep(10);
+            }
         }
     }
 
