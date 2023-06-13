@@ -27,25 +27,24 @@ class SQSWorker extends SQSBase
         while ($this->checkForMessages) {
 
             $this->getMessages(function (array $messages) use ($workerProcess, $errorHandlerCallback) {
+
+                // Randomly log a heartbeat
+                if (rand(1, 100) === 1) {
+                    $this->log('Heartbeat on: ' . $this->queueName);
+                }
+
                 foreach ($messages as $value) {
                     try {
                         $this->currentJob = new SQSJob($value);
-
-                        $this->log("Processing: " . $this->currentJob->getMessageId());
-
                         // Process the job
                         $exitCode = $workerProcess($this->currentJob);
 
                         if ($exitCode === 0 || is_null($exitCode)) {
                             $this->ackMessage($value);
-                            $this->log('Processed: ' . $this->currentJob->getMessageId());
                         } else {
                             $this->nackMessage($value);
-                            $this->log('Failed: ' . $this->currentJob->getMessageId());
                         }
                     } catch (\Throwable $e) {
-
-                        $this->log('Error: ' . $this->currentJob->getMessageId() . ' - ' . $e->getMessage());
                         $errorHandlerCallback(SQSJobFailedException::create($e, $this->currentJob), $this->currentJob?->attempts());
                     }
                 }
