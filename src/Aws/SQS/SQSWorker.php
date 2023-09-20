@@ -89,7 +89,7 @@ class SQSWorker extends SQSBase
     private function nackMessage(array $message): void
     {
         $this->sqsClient->changeMessageVisibility([
-            'VisibilityTimeout' => 0,
+            'VisibilityTimeout' => 5,
             'QueueUrl' => $this->queueUrl,
             'ReceiptHandle' => $message['ReceiptHandle'],
         ]);
