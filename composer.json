@@ -5,7 +5,7 @@
   "keywords": [],
   "license": "MIT",
   "require": {
-    "php": "^8.1",
+    "php": ">=8.1",
     "aws/aws-sdk-php": "^3.281",
     "nesbot/carbon": "^2.70",
     "wildbit/postmark-php": "^4.0"
