@@ -16,7 +16,7 @@ class SQSWorker extends SQSBase
     private bool $checkForMessages = true;
     private Carbon $queueStartedAt;
 
-    public function listen(string $queueName, callable $workerProcess, callable $errorHandlerCallback = null): void
+    public function listen(string $queueName, callable $workerProcess, ?callable $errorHandlerCallback = null): void
     {
         $this->queueName = $queueName;
         $this->queueUrl = $this->getQueueUrl($this->queueName);
